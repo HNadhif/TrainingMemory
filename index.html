@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#4c1d95">
+  <meta name="description" content="Numoria - Dual-Task Cognitive Game. Latih koordinasi visuomotor dan working memory mental math secara simultan.">
+  <title>Numoria - Dual-Task Cognitive Game</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+
+  <!-- Modular Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/screens.css">
+</head>
+<body>
+
+  <div id="app">
+
+    <!-- ====================================================================
+         SCREEN 1: LOADING SCREEN
+         ==================================================================== -->
+    <div id="screen-loader" class="screen active">
+      <div class="loader-pulse-container">
+        <div class="pulse-ring"></div>
+        <div class="pulse-ring"></div>
+        <div class="loader-core">⚡</div>
+      </div>
+      <h1 class="glow-title" style="font-size: 2rem; margin-bottom: 6px;">NUMORIA</h1>
+      <p class="loader-text">Memuat Lab Kognitif...</p>
+    </div>
+
+    <!-- ====================================================================
+         SCREEN 2: START / MENU SCREEN
+         ==================================================================== -->
+    <div id="screen-start" class="screen">
+      <div class="menu-header">
+        <span class="game-badge">Dual-Task Cognitive Test</span>
+        <h1 class="glow-title">NUMORIA</h1>
+        <p class="subtitle">Tes Fokus Ganda: Visuomotor Tracking & Mental Math</p>
+      </div>
+
+      <div class="concept-cards">
+        <div class="card">
+          <div class="card-icon purple">🌊</div>
+          <div class="card-body">
+            <h3>Tugas 1: Lacak Gelombang</h3>
+            <p>Jaga posisi kursor/sentuhan Anda mengikuti alur gelombang yang bergerak turun.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon cyan">🧠</div>
+          <div class="card-body">
+            <h3>Tugas 2: Hitung Cepat</h3>
+            <p>Ingat & jumlahkan angka pop-up (-10 s/d 10) yang muncul di sela-sela gelombang.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon amber">🎯</div>
+          <div class="card-body">
+            <h3>Tebak Jumlah di Akhir Ronde</h3>
+            <p>Masukkan hasil total penjumlahan sebelum berlanjut ke ronde berikutnya.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="rounds-preview">
+        <div class="rounds-preview-title">
+          <span>Struktur Permainan</span>
+          <span>4 Ronde Total</span>
+        </div>
+        <div class="rounds-grid">
+          <div class="round-pill">
+            <span class="r-name">Ronde 1</span>
+            <span class="r-val">4 Wave</span>
+          </div>
+          <div class="round-pill">
+            <span class="r-name">Ronde 2</span>
+            <span class="r-val">5 Wave</span>
+          </div>
+          <div class="round-pill">
+            <span class="r-name">Ronde 3</span>
+            <span class="r-val">6 Wave</span>
+          </div>
+          <div class="round-pill">
+            <span class="r-name">Ronde 4</span>
+            <span class="r-val">7 Wave</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-footer">
+        <button id="btn-start-game" class="btn btn-primary">
+          <span>Mulai Permainan</span>
+          <span>➔</span>
+        </button>
+        <div class="control-hint" id="control-hint-desc">
+          <span>🎮 Kontrol:</span>
+          <span>Sentuh (HP)</span>
+          <span>•</span>
+          <span>Mouse</span>
+          <span>•</span>
+          <span><span class="kbd">W</span> / <span class="kbd">S</span> / <span class="kbd">A</span> / <span class="kbd">D</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         SCREEN 3: GAMEPLAY SCREEN (CANVAS + HUD)
+         ==================================================================== -->
+    <div id="screen-game" class="screen">
+      <!-- Top HUD -->
+      <div class="game-hud-top">
+        <div class="hud-left">
+          <div class="hud-badge">
+            <span>Ronde</span>
+            <span id="hud-round-text" style="color: #c084fc;">1/4</span>
+          </div>
+          <div class="hud-badge accent">
+            <span>Wave</span>
+            <span id="hud-wave-text">1/4</span>
+          </div>
+        </div>
+        <div class="hud-right">
+          <button id="btn-sound-toggle" class="btn-icon" title="Toggle Suara">🔊</button>
+        </div>
+      </div>
+
+      <!-- Sync Meter -->
+      <div class="sync-meter-wrapper">
+        <div class="sync-meter-info">
+          <span class="sync-label">Akurasi Trace: <span id="sync-pct-text">0%</span></span>
+          <span id="sync-status-indicator" class="sync-status">OFF TRACK</span>
+        </div>
+        <div class="sync-progress-track">
+          <div id="sync-progress-bar" class="sync-progress-bar"></div>
+        </div>
+      </div>
+
+      <!-- Toast for Wave Success/Fail -->
+      <div id="wave-toast">Wave Berhasil!</div>
+
+      <!-- Gameplay Area: Canvas & Dedicated Slider Control -->
+      <div id="gameplay-area" class="gameplay-area">
+        <canvas id="gameCanvas"></canvas>
+        <div id="slider-container" class="slider-container slider-horizontal">
+          <div id="slider-track" class="slider-track">
+            <div id="slider-thumb" class="slider-thumb">
+              <div class="slider-thumb-knob"></div>
+            </div>
+          </div>
+          <div id="slider-caption" class="slider-caption">SLIDER KONTROL</div>
+        </div>
+      </div>
+
+      <!-- Bottom HUD -->
+      <div class="game-hud-bottom">
+        <div id="wave-dots" class="wave-dots-container">
+          <!-- Populated dynamically via JS -->
+        </div>
+        <button id="btn-control-toggle" class="control-toggle-btn" title="Ganti Mode Tampilan (HP / Desktop)">
+          <span id="control-toggle-label">📱 HP (Vertikal)</span>
+        </button>
+      </div>
+
+      <!-- Countdown Overlay (3, 2, 1, GO!) -->
+      <div id="countdown-overlay">
+        <div id="countdown-round-tag" class="countdown-round-tag">Ronde 1</div>
+        <div id="countdown-number" class="countdown-number">3</div>
+        <p class="countdown-instruction">Siapkan fokus Anda!</p>
+      </div>
+
+      <!-- Number Pop-up Overlay (Maksimal 1 detik) -->
+      <div id="popup-number-overlay">
+        <div class="popup-label">Ingat & Jumlahkan</div>
+        <div id="popup-number-value" class="popup-value positive">+7</div>
+        <div class="popup-timer-bar">
+          <div id="popup-timer-fill" class="popup-timer-fill"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 1: ROUND ANSWER INPUT
+         ==================================================================== -->
+    <div id="modal-answer" class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-handle"></div>
+        <h2 class="modal-title" id="answer-modal-title">Ronde 1 Selesai!</h2>
+        <p class="modal-desc">Berapa hasil penjumlahan semua angka yang baru saja muncul?</p>
+
+        <div class="input-display">
+          <div id="input-display-val" class="input-value placeholder">0</div>
+        </div>
+
+        <div class="numpad-grid">
+          <button class="num-btn" data-key="1">1</button>
+          <button class="num-btn" data-key="2">2</button>
+          <button class="num-btn" data-key="3">3</button>
+          <button class="num-btn" data-key="4">4</button>
+          <button class="num-btn" data-key="5">5</button>
+          <button class="num-btn" data-key="6">6</button>
+          <button class="num-btn" data-key="7">7</button>
+          <button class="num-btn" data-key="8">8</button>
+          <button class="num-btn" data-key="9">9</button>
+          <button class="num-btn btn-action" data-key="sign">±</button>
+          <button class="num-btn" data-key="0">0</button>
+          <button class="num-btn btn-action" data-key="del">⌫</button>
+        </div>
+
+        <button id="btn-submit-answer" class="btn btn-primary submit-answer-btn">
+          Kirim Jawaban ➔
+        </button>
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 2: ANSWER FEEDBACK (GREEN FOR CORRECT / RED FOR WRONG)
+         ==================================================================== -->
+    <div id="modal-feedback" class="modal-backdrop">
+      <div class="modal-card">
+        <div id="feedback-icon" class="feedback-icon-badge">✓</div>
+        <h2 id="feedback-title" class="feedback-title">Jawaban Benar!</h2>
+        <p id="feedback-desc" class="subtitle" style="text-align: center;">Perhitungan aritmatika Anda sempurna.</p>
+
+        <div class="feedback-details">
+          <div class="feedback-row">
+            <span class="lbl">Jawaban Anda</span>
+            <span id="fb-user-ans" class="val">+8</span>
+          </div>
+          <div class="feedback-row">
+            <span class="lbl">Kunci Jawaban</span>
+            <span id="fb-correct-ans" class="val">+8</span>
+          </div>
+          <div class="feedback-row">
+            <span class="lbl">Trace Gelombang</span>
+            <span id="fb-wave-traced" class="val">3 / 4 Berhasil</span>
+          </div>
+          <div id="fb-formula" class="formula-breakdown">
+            <!-- Formula math breakdown -->
+          </div>
+        </div>
+
+        <button id="btn-feedback-next" class="btn btn-primary" style="width: 100%;">
+          Lanjut ke Ronde Berikutnya ➔
+        </button>
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         SCREEN 4: FINAL RESULTS / SUMMARY SCREEN
+         ==================================================================== -->
+    <div id="screen-results" class="screen">
+      <div class="results-header">
+        <span class="results-badge">Tes Kognitif Selesai</span>
+        <h1 class="glow-title" style="font-size: 2.2rem;">EVALUASI AKHIR</h1>
+        <p class="subtitle">Analisis Performa Koordinasi Motorik & Memori Kerja</p>
+      </div>
+
+      <div class="total-score-card">
+        <div class="score-label">Total Skor Kognitif</div>
+        <div id="res-total-score" class="score-huge">0</div>
+        <div id="res-grade-pill" class="score-grade">GRADE S - SANGAT FOKUS</div>
+      </div>
+
+      <div class="metrics-container">
+        <!-- Metric 1: Wave Tracking -->
+        <div class="metric-card">
+          <div class="metric-head">
+            <div class="metric-head-left">
+              <span>🌊</span>
+              <span>Visuomotor Tracking</span>
+            </div>
+            <div id="res-wave-pts" class="metric-head-pts">0 PTS</div>
+          </div>
+          <div class="metric-bar-bg">
+            <div id="res-wave-bar" class="metric-bar-fill fill-wave" style="width: 0%;"></div>
+          </div>
+          <div class="metric-sub">
+            <span id="res-wave-ratio">0 / 22 Gelombang Berhasil</span>
+            <span id="res-wave-acc">Rata-rata: 0%</span>
+          </div>
+        </div>
+
+        <!-- Metric 2: Mental Math -->
+        <div class="metric-card">
+          <div class="metric-head">
+            <div class="metric-head-left">
+              <span>🧠</span>
+              <span>Mental Math & Memory</span>
+            </div>
+            <div id="res-math-pts" class="metric-head-pts">0 PTS</div>
+          </div>
+          <div class="metric-bar-bg">
+            <div id="res-math-bar" class="metric-bar-fill fill-math" style="width: 0%;"></div>
+          </div>
+          <div class="metric-sub">
+            <span id="res-math-ratio">0 / 4 Ronde Benar</span>
+            <span id="res-math-pct">Akurasi: 0%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="results-actions">
+        <button id="btn-play-again" class="btn btn-primary">
+          <span>Main Lagi</span>
+          <span>↺</span>
+        </button>
+        <button id="btn-share-score" class="btn btn-secondary">
+          <span>Salin Hasil Skor</span>
+          <span>📋</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modular JavaScript Engine -->
+  <script src="js/config.js"></script>
+  <script src="js/sound.js"></script>
+  <script src="js/particles.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

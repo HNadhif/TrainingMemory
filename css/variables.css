@@ -1,0 +1,45 @@
+/* ==========================================================================
+   NUMORIA - THEME VARIABLES & DESIGN TOKENS
+   Primary: Deep Purple & Electric Violet
+   Secondary: Vibrant Neon Cyan & Electric Teal
+   Accents: Emerald Green (Correct) & Crimson Red (Error)
+   ========================================================================== */
+:root {
+  /* Backgrounds */
+  --bg-dark: #090514;
+  --bg-dark-end: #0d061c;
+  --bg-card: rgba(22, 13, 43, 0.82);
+  --bg-card-border: rgba(168, 85, 247, 0.25);
+
+  /* Primary Palette (Ungu / Purple) */
+  --primary-purple: #8b5cf6;
+  --primary-glow: #a855f7;
+  --primary-dark: #4c1d95;
+  --primary-gradient: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #6366f1 100%);
+  --shadow-purple: 0 10px 25px -5px rgba(124, 58, 237, 0.4);
+
+  /* Secondary Palette (Cyan / Teal) */
+  --secondary-cyan: #06b6d4;
+  --secondary-glow: #22d3ee;
+  --secondary-gradient: linear-gradient(135deg, #0891b2 0%, #06b6d4 50%, #38bdf8 100%);
+  --shadow-cyan: 0 10px 25px -5px rgba(6, 182, 212, 0.4);
+
+  /* Accent Colors */
+  --accent-green: #10b981;
+  --accent-green-glow: #34d399;
+  --accent-red: #ef4444;
+  --accent-red-glow: #f87171;
+  --accent-amber: #f59e0b;
+
+  /* Typography */
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --font-main: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Layout & Radii */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-full: 9999px;
+}
