@@ -1,0 +1,31 @@
+# Sistem Operasi (Windows & macOS)
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Editor & IDE (VS Code, Antigravity, JetBrains, dll.)
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# File Log & Sementara
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.tmp
+*.temp
+
+# Folder Dependensi & Build (jaga-jaga jika nanti memakai bundler/npm)
+node_modules/
+dist/
+build/
+.cache/
+
+# Environment Variables (jika suatu saat memakai API key/konfigurasi lokal)
+.env
+.env.local
+.env.*.local
