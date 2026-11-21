@@ -1,45 +1,50 @@
 /* ==========================================================================
    NUMORIA - THEME VARIABLES & DESIGN TOKENS
-   Primary: Deep Purple & Electric Violet
-   Secondary: Vibrant Neon Cyan & Electric Teal
-   Accents: Emerald Green (Correct) & Crimson Red (Error)
+   Minimalist Precision Theme: Clean, High Contrast, Solid Colors
+   No Gradients, No Glows, No Pill Corners
    ========================================================================== */
 :root {
-  /* Backgrounds */
-  --bg-dark: #090514;
-  --bg-dark-end: #0d061c;
-  --bg-card: rgba(22, 13, 43, 0.82);
-  --bg-card-border: rgba(168, 85, 247, 0.25);
+  /* Backgrounds (Solid, Flat) */
+  --bg-dark: #111215;
+  --bg-dark-end: #111215;
+  --bg-surface: #18191e;
+  --bg-card: #18191e;
+  --bg-card-border: #272832;
+  --bg-input: #121317;
 
-  /* Primary Palette (Ungu / Purple) */
-  --primary-purple: #8b5cf6;
-  --primary-glow: #a855f7;
-  --primary-dark: #4c1d95;
-  --primary-gradient: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #6366f1 100%);
-  --shadow-purple: 0 10px 25px -5px rgba(124, 58, 237, 0.4);
+  /* Primary Palette (Solid Precision Blue / Neutral) */
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-dark: #1e40af;
+  --primary-purple: #2563eb;
+  --primary-glow: #2563eb;
+  --primary-gradient: #2563eb;
+  --shadow-purple: none;
 
-  /* Secondary Palette (Cyan / Teal) */
-  --secondary-cyan: #06b6d4;
-  --secondary-glow: #22d3ee;
-  --secondary-gradient: linear-gradient(135deg, #0891b2 0%, #06b6d4 50%, #38bdf8 100%);
-  --shadow-cyan: 0 10px 25px -5px rgba(6, 182, 212, 0.4);
+  /* Secondary Palette (Solid Cyan / Slate) */
+  --secondary-cyan: #0284c7;
+  --secondary-glow: #0284c7;
+  --secondary-gradient: #0284c7;
+  --shadow-cyan: none;
 
-  /* Accent Colors */
+  /* Accent Colors (Solid, Crisp) */
   --accent-green: #10b981;
-  --accent-green-glow: #34d399;
+  --accent-green-glow: #10b981;
   --accent-red: #ef4444;
-  --accent-red-glow: #f87171;
+  --accent-red-glow: #ef4444;
   --accent-amber: #f59e0b;
 
   /* Typography */
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
+  --text-subtle: #64748b;
   --font-main: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  /* Layout & Radii */
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 22px;
-  --radius-full: 9999px;
+  /* Layout & Radii (Crisp geometric corners, NO pill corners) */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 6px;
+  --radius-full: 4px;
 }
