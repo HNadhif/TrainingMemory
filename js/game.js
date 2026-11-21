@@ -115,13 +115,7 @@ class NumoriaGame {
         this.sliderContainer.classList.add('slider-vertical');
       }
       if (this.controlHintElement) {
-        this.controlHintElement.innerHTML = `<span>🎮 Kontrol Desktop:</span> <span>Slider di Samping (Mouse Bebas)</span> • <span><span class="kbd">W</span> / <span class="kbd">S</span></span>`;
-      }
-      if (this.orientationToggleLabel) {
-        this.orientationToggleLabel.textContent = '💻 Desktop (Horizontal)';
-      }
-      if (this.sliderCaption) {
-        this.sliderCaption.textContent = 'SLIDER PC';
+        this.controlHintElement.innerHTML = `<span>Kontrol:</span> <span>Slider di Samping (Mouse)</span> • <span><span class="kbd">W</span> / <span class="kbd">S</span></span>`;
       }
     } else {
       app.classList.remove('desktop-landscape');
@@ -130,13 +124,7 @@ class NumoriaGame {
         this.sliderContainer.classList.add('slider-horizontal');
       }
       if (this.controlHintElement) {
-        this.controlHintElement.innerHTML = `<span>🎮 Kontrol HP:</span> <span>Slider di Bawah (Sentuh Bebas)</span> • <span><span class="kbd">A</span> / <span class="kbd">D</span></span>`;
-      }
-      if (this.orientationToggleLabel) {
-        this.orientationToggleLabel.textContent = '📱 HP (Vertikal)';
-      }
-      if (this.sliderCaption) {
-        this.sliderCaption.textContent = 'SLIDER HP';
+        this.controlHintElement.innerHTML = `<span>Kontrol:</span> <span>Slider di Bawah (Sentuh)</span> • <span><span class="kbd">A</span> / <span class="kbd">D</span></span>`;
       }
     }
 
@@ -152,15 +140,15 @@ class NumoriaGame {
     this.canvas.height = this.canvasHeight * this.dpr;
     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
 
-    // Judgment Line position:
-    // Portrait: Horizontal line at ~78% height
-    // Landscape: Vertical line at ~82% width
+    // Judgment Line position (seimbang, tidak terlalu dekat dan tidak terlalu jauh):
+    // Portrait: Garis horizontal proporsional (~84% tinggi canvas)
+    // Landscape: Garis vertikal proporsional (~88% lebar canvas)
     if (this.isLandscape()) {
-      this.judgmentLinePos = Math.round(this.canvasWidth * 0.82);
+      this.judgmentLinePos = Math.round(this.canvasWidth * 0.88);
       this.playerX = this.judgmentLinePos;
       this.setSliderRatio(0.5); // Center slider
     } else {
-      this.judgmentLinePos = Math.round(this.canvasHeight * 0.78);
+      this.judgmentLinePos = Math.round(this.canvasHeight * 0.84);
       this.playerY = this.judgmentLinePos;
       this.setSliderRatio(0.5); // Center slider
     }
@@ -179,7 +167,6 @@ class NumoriaGame {
     this.sliderContainer = document.getElementById('slider-container');
     this.sliderTrack = document.getElementById('slider-track');
     this.sliderThumb = document.getElementById('slider-thumb');
-    this.sliderCaption = document.getElementById('slider-caption');
 
     // Modals & Overlays
     this.modalAnswer = document.getElementById('modal-answer');
@@ -191,8 +178,6 @@ class NumoriaGame {
     // Buttons
     this.btnStartGame = document.getElementById('btn-start-game');
     this.btnSoundToggle = document.getElementById('btn-sound-toggle');
-    this.btnOrientationToggle = document.getElementById('btn-control-toggle');
-    this.orientationToggleLabel = document.getElementById('control-toggle-label');
     this.btnSubmitAnswer = document.getElementById('btn-submit-answer');
     this.btnFeedbackNext = document.getElementById('btn-feedback-next');
     this.btnPlayAgain = document.getElementById('btn-play-again');
@@ -277,16 +262,10 @@ class NumoriaGame {
     this.btnSoundToggle.addEventListener('click', (e) => {
       e.stopPropagation();
       const unmuted = this.sound.toggleMute();
-      this.btnSoundToggle.textContent = unmuted ? '🔊' : '🔇';
+      const soundSvgOn = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`;
+      const soundSvgOff = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>`;
+      this.btnSoundToggle.innerHTML = unmuted ? soundSvgOn : soundSvgOff;
     });
-
-    // Orientation Switch Toggle (HP Portrait <-> Desktop Landscape)
-    if (this.btnOrientationToggle) {
-      this.btnOrientationToggle.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.toggleOrientationMode();
-      });
-    }
 
     // Start Game
     this.btnStartGame.addEventListener('click', () => {
@@ -423,28 +402,74 @@ class NumoriaGame {
   }
 
   /* ========================================================================
-     CLEAN WAVE LINE GENERATOR (Clean harmonic line with Start & End nodes)
+     ORGANIC WAVE LINE GENERATOR
+     - Muncul perlahan dari offscreen (spawn dari luar layar)
+     - Kurva halus, tidak terlalu menekuk
+     - Pola lekukan acak (random spline waypoints)
      ======================================================================== */
   createWaveLine(config) {
     const isLand = this.isLandscape();
     const duration = config.waveDuration;
     const speed = config.speed;
     const length = duration * speed;
-    const leadInDist = this.config.LEAD_IN_TIME * speed;
 
-    const transverseCenter = isLand ? (this.canvasHeight / 2) : (this.canvasWidth / 2);
-    const maxAmplitude = (isLand ? this.canvasHeight : this.canvasWidth) * 0.32;
-    const amp1 = (maxAmplitude * 0.72) * (0.8 + Math.random() * 0.4);
-    const amp2 = (maxAmplitude * 0.42) * config.complexity;
-    const freq1 = (0.007 + Math.random() * 0.004);
-    const freq2 = freq1 * 2.2;
-    const phase1 = Math.random() * Math.PI * 2;
-    const phase2 = Math.random() * Math.PI * 2;
+    // Muncul dari luar layar (offscreen) secara bertahap
+    const leadInDist = this.judgmentLinePos + 40;
 
+    const transverseDimension = isLand ? this.canvasHeight : this.canvasWidth;
+    const transverseCenter = transverseDimension / 2;
+
+    // Amplitudo lembut: tidak terlalu menekuk (maksimal ±20% dimensi canvas)
+    const maxAmp = transverseDimension * 0.20;
+
+    // Bangun waypoint acak sepanjang gelombang (s)
+    const waypoints = [];
+    let currentS = -120;
+    let lastY = transverseCenter + (Math.random() - 0.5) * maxAmp * 0.5;
+
+    waypoints.push({ s: currentS, y: lastY });
+
+    while (currentS < length + 300) {
+      // Jarak lekukan acak: 190px s/d 310px agar variasi belokan dinamis
+      const interval = 190 + Math.random() * 120;
+      currentS += interval;
+
+      // Batasi sudut kemiringan agar tidak menekuk ekstrem (maks slope ~0.32)
+      const maxStep = Math.min(maxAmp * 1.05, interval * 0.32);
+      const targetY = transverseCenter + (Math.random() - 0.5) * 2 * maxAmp;
+      const delta = Math.max(-maxStep, Math.min(maxStep, targetY - lastY));
+      lastY = Math.max(transverseCenter - maxAmp, Math.min(transverseCenter + maxAmp, lastY + delta));
+
+      waypoints.push({ s: currentS, y: lastY });
+    }
+
+    // Evaluasi kurva halus menggunakan Catmull-Rom Spline
     const getTransverseAt = (s) => {
-      const w1 = Math.sin(s * freq1 + phase1) * amp1;
-      const w2 = Math.cos(s * freq2 + phase2) * amp2;
-      return transverseCenter + w1 + w2;
+      let i = 0;
+      while (i < waypoints.length - 2 && waypoints[i + 1].s < s) {
+        i++;
+      }
+
+      const p0 = (i > 0) ? waypoints[i - 1] : waypoints[i];
+      const p1 = waypoints[i];
+      const p2 = (i + 1 < waypoints.length) ? waypoints[i + 1] : p1;
+      const p3 = (i + 2 < waypoints.length) ? waypoints[i + 2] : p2;
+
+      const span = Math.max(1, p2.s - p1.s);
+      const t = Math.max(0, Math.min(1, (s - p1.s) / span));
+
+      const t2 = t * t;
+      const t3 = t2 * t;
+
+      const v0 = (p2.y - p0.y) * 0.5;
+      const v1 = (p3.y - p1.y) * 0.5;
+
+      const h00 = 2 * t3 - 3 * t2 + 1;
+      const h10 = t3 - 2 * t2 + t;
+      const h01 = -2 * t3 + 3 * t2;
+      const h11 = t3 - t2;
+
+      return h00 * p1.y + h10 * v0 + h01 * p2.y + h11 * v1;
     };
 
     return {
@@ -559,8 +584,9 @@ class NumoriaGame {
 
     this.syncProgressBar.style.width = '0%';
     this.syncPctText.textContent = '0%';
-    this.syncStatusIndicator.textContent = 'SIAPKAN POSISI';
-    this.syncStatusIndicator.classList.remove('in-sync');
+    if (this.syncStatusIndicator) {
+      this.syncStatusIndicator.textContent = '';
+    }
   }
 
   endWave() {
@@ -695,11 +721,11 @@ class NumoriaGame {
     this.state = 'FEEDBACK';
     this.modalFeedback.className = `modal-backdrop active ${isCorrect ? 'feedback-correct' : 'feedback-wrong'}`;
 
-    this.feedbackIcon.textContent = isCorrect ? '✓' : '✗';
-    this.feedbackTitle.textContent = isCorrect ? 'JAWABAN BENAR!' : 'KURANG TEPAT!';
+    this.feedbackIcon.textContent = isCorrect ? 'OK' : 'ERR';
+    this.feedbackTitle.textContent = isCorrect ? 'JAWABAN BENAR' : 'KURANG TEPAT';
     this.feedbackDesc.textContent = isCorrect 
-      ? 'Memori kerja & aritmatika mental Anda sangat akurat!' 
-      : 'Fokus ganda terbagi! Perhatikan kunci penjumlahan di bawah.';
+      ? 'Memori kerja & aritmatika mental Anda sangat akurat.' 
+      : 'Fokus ganda terbagi. Perhatikan kunci penjumlahan di bawah.';
 
     this.fbUserAns.textContent = (userAns >= 0 ? `+${userAns}` : `${userAns}`);
     this.fbCorrectAns.textContent = (actualSum >= 0 ? `+${actualSum}` : `${actualSum}`);
@@ -759,16 +785,16 @@ class NumoriaGame {
     let gradeText = "";
     if (totalScore >= 9000) {
       gradeText = "GRADE S - DUAL-FOCUS MASTER";
-      this.resGradePill.style.color = "var(--accent-green-glow)";
+      this.resGradePill.style.color = "var(--accent-green)";
     } else if (totalScore >= 7500) {
       gradeText = "GRADE A - SANGAT FOKUS & TANGGUH";
-      this.resGradePill.style.color = "var(--secondary-glow)";
+      this.resGradePill.style.color = "var(--secondary-cyan)";
     } else if (totalScore >= 5500) {
       gradeText = "GRADE B - PERFORMA SOLID";
-      this.resGradePill.style.color = "#fbbf24";
+      this.resGradePill.style.color = "var(--accent-amber)";
     } else {
       gradeText = "GRADE C - BUTUH LATIHAN MEMORI";
-      this.resGradePill.style.color = "var(--accent-red-glow)";
+      this.resGradePill.style.color = "var(--accent-red)";
     }
     this.resGradePill.textContent = gradeText;
   }
@@ -787,11 +813,11 @@ class NumoriaGame {
   }
 
   copyScoreToClipboard() {
-    const text = `🎮 NUMORIA - Dual-Task Cognitive Game\n` +
-      `🏆 Total Skor: ${this.resTotalScore.textContent} PTS\n` +
-      `🌊 Wave Tracking: ${this.totalWavesSuccess}/${this.totalWavesCount} Gelombang Berhasil\n` +
-      `🧠 Mental Math: ${this.totalRoundsSuccess}/${this.config.TOTAL_ROUNDS} Ronde Tepat\n` +
-      `⚡ Uji fokus ganda visuomotor & working memory Anda di Numoria!`;
+    const text = `NUMORIA - Dual-Task Cognitive Game\n` +
+      `Total Skor: ${this.resTotalScore.textContent} PTS\n` +
+      `Wave Tracking: ${this.totalWavesSuccess}/${this.totalWavesCount} Gelombang Berhasil\n` +
+      `Mental Math: ${this.totalRoundsSuccess}/${this.config.TOTAL_ROUNDS} Ronde Tepat\n` +
+      `Hasil evaluasi performa fokus ganda visuomotor & working memory di Numoria.`;
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(() => {
@@ -892,20 +918,12 @@ class NumoriaGame {
           if (this.isCurrentlyInSync) {
             w.timeInSync += dt;
             this.particles.emit(this.playerX, this.playerY, '#22d3ee', 1, 2.0);
-            this.syncStatusIndicator.textContent = 'IN LINE';
-            this.syncStatusIndicator.classList.add('in-sync');
-          } else {
-            this.syncStatusIndicator.textContent = 'OFF LINE';
-            this.syncStatusIndicator.classList.remove('in-sync');
           }
 
           const currentAcc = Math.min(1.0, w.timeInSync / w.activeHoldTime);
           const currentPct = Math.round(currentAcc * 100);
           this.syncPctText.textContent = `${currentPct}%`;
           this.syncProgressBar.style.width = `${Math.min(100, Math.round((w.timeInSync / (w.duration * this.config.SYNC_THRESHOLD)) * 100))}%`;
-        } else if (!isHeadCrossed) {
-          this.syncStatusIndicator.textContent = 'SIAPKAN POSISI';
-          this.syncStatusIndicator.classList.remove('in-sync');
         }
 
         if (isTailCrossed) {
@@ -990,97 +1008,39 @@ class NumoriaGame {
 
     if (linePts.length < 2) return;
 
-    // A. Outer translucent glow line (cheap alpha layering)
+    // Clean wave line (pure path without start/end circles)
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(linePts[0].x, linePts[0].y);
     for (let i = 1; i < linePts.length; i++) {
       ctx.lineTo(linePts[i].x, linePts[i].y);
     }
-    ctx.lineWidth = 7;
-    ctx.strokeStyle = 'rgba(6, 182, 212, 0.22)';
-    ctx.lineCap = 'round';
-    ctx.stroke();
-
-    // B. Core neon sharp line
     ctx.lineWidth = 3.2;
-    ctx.strokeStyle = '#22d3ee';
+    ctx.strokeStyle = '#0284c7';
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
     ctx.stroke();
     ctx.restore();
-
-    // C. Draw Head Node at s = 0 (Start of Wave)
-    const headTransverse = w.getTransverseAt(0);
-    const headFlow = this.judgmentLinePos - (0 - (w.travelDist - w.leadInDist));
-    this.drawWaveNode(ctx, headFlow, headTransverse, isLand, 'START', '#34d399');
-
-    // D. Draw Tail Node at s = w.length (End of Wave)
-    const tailTransverse = w.getTransverseAt(w.length);
-    const tailFlow = this.judgmentLinePos - (w.length - (w.travelDist - w.leadInDist));
-    this.drawWaveNode(ctx, tailFlow, tailTransverse, isLand, 'END', '#c084fc');
   }
 
-  drawWaveNode(ctx, flowPos, transversePos, isLand, label, color) {
-    if (isLand && (flowPos < -40 || flowPos > this.canvasWidth + 40)) return;
-    if (!isLand && (flowPos < -40 || flowPos > this.canvasHeight + 40)) return;
-
-    const x = isLand ? flowPos : transversePos;
-    const y = isLand ? transversePos : flowPos;
-
-    ctx.save();
-    ctx.translate(x, y);
-
-    // Outer ring
-    ctx.beginPath();
-    ctx.arc(0, 0, 8, 0, Math.PI * 2);
-    ctx.fillStyle = color;
-    ctx.fill();
-
-    // White core
-    ctx.beginPath();
-    ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
-    ctx.fillStyle = '#ffffff';
-    ctx.fill();
-
-    // Text Label
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 9px monospace';
-    ctx.textAlign = 'center';
-    if (isLand) {
-      ctx.fillText(label, -14, 3);
-    } else {
-      ctx.fillText(label, 0, -11);
-    }
-    ctx.restore();
-  }
-
-  /* Render the Judgment Target Line */
+  /* Render the Judgment Target Line (Dekat slider, tanpa tulisan TARGET) */
   drawJudgmentLine(ctx, isLand) {
     ctx.save();
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 1.5;
     ctx.setLineDash([4, 6]);
 
     if (isLand) {
-      ctx.strokeStyle = this.isCurrentlyInSync ? 'rgba(52, 211, 153, 0.5)' : 'rgba(255, 255, 255, 0.2)';
+      ctx.strokeStyle = this.isCurrentlyInSync ? 'rgba(52, 211, 153, 0.6)' : 'rgba(255, 255, 255, 0.25)';
       ctx.beginPath();
-      ctx.moveTo(this.judgmentLinePos, 15);
-      ctx.lineTo(this.judgmentLinePos, this.canvasHeight - 15);
+      ctx.moveTo(this.judgmentLinePos, 10);
+      ctx.lineTo(this.judgmentLinePos, this.canvasHeight - 10);
       ctx.stroke();
-
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-      ctx.font = 'bold 9px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText('TARGET', this.judgmentLinePos, 12);
     } else {
-      ctx.strokeStyle = this.isCurrentlyInSync ? 'rgba(52, 211, 153, 0.5)' : 'rgba(255, 255, 255, 0.2)';
+      ctx.strokeStyle = this.isCurrentlyInSync ? 'rgba(52, 211, 153, 0.6)' : 'rgba(255, 255, 255, 0.25)';
       ctx.beginPath();
-      ctx.moveTo(15, this.judgmentLinePos);
-      ctx.lineTo(this.canvasWidth - 15, this.judgmentLinePos);
+      ctx.moveTo(10, this.judgmentLinePos);
+      ctx.lineTo(this.canvasWidth - 10, this.judgmentLinePos);
       ctx.stroke();
-
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-      ctx.font = 'bold 9px monospace';
-      ctx.textAlign = 'left';
-      ctx.fillText('TARGET', 16, this.judgmentLinePos - 6);
     }
     ctx.restore();
   }
