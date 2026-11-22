@@ -188,9 +188,12 @@ class NumoriaGame {
     this.hudRoundText = document.getElementById('hud-round-text');
     this.hudWaveText = document.getElementById('hud-wave-text');
     this.syncPctText = document.getElementById('sync-pct-text');
+    this.syncTargetText = document.getElementById('sync-target-text');
     this.syncStatusIndicator = document.getElementById('sync-status-indicator');
     this.syncProgressBar = document.getElementById('sync-progress-bar');
+    this.syncThresholdMarker = document.getElementById('sync-threshold-marker');
     this.waveDotsContainer = document.getElementById('wave-dots');
+    this.updateThresholdMarker();
 
     // Overlay Elements
     this.countdownNumber = document.getElementById('countdown-number');
@@ -567,6 +570,16 @@ class NumoriaGame {
     }, 900);
   }
 
+  updateThresholdMarker() {
+    const thresholdPct = Math.round((this.config.SYNC_THRESHOLD || 0.70) * 100);
+    if (this.syncThresholdMarker) {
+      this.syncThresholdMarker.style.left = `${thresholdPct}%`;
+    }
+    if (this.syncTargetText) {
+      this.syncTargetText.textContent = `${thresholdPct}%`;
+    }
+  }
+
   /* ========================================================================
      WAVE LINE LIFECYCLE (START -> BODY LINE TRACE -> END)
      ======================================================================== */
@@ -582,7 +595,9 @@ class NumoriaGame {
     // Create the clean finite wave line
     this.currentWave = this.createWaveLine(config);
 
+    this.updateThresholdMarker();
     this.syncProgressBar.style.width = '0%';
+    this.syncProgressBar.classList.remove('pass', 'fail');
     this.syncPctText.textContent = '0%';
     if (this.syncStatusIndicator) {
       this.syncStatusIndicator.textContent = '';
@@ -594,6 +609,17 @@ class NumoriaGame {
     const w = this.currentWave;
     const accuracy = Math.min(1.0, w.timeInSync / w.duration);
     const isSuccess = accuracy >= this.config.SYNC_THRESHOLD;
+    const finalPct = Math.round(accuracy * 100);
+
+    this.syncPctText.textContent = `${finalPct}%`;
+    this.syncProgressBar.style.width = `${finalPct}%`;
+    if (isSuccess) {
+      this.syncProgressBar.classList.add('pass');
+      this.syncProgressBar.classList.remove('fail');
+    } else {
+      this.syncProgressBar.classList.add('fail');
+      this.syncProgressBar.classList.remove('pass');
+    }
 
     this.roundWaveAccuracies.push(accuracy);
     if (isSuccess) {
@@ -920,10 +946,18 @@ class NumoriaGame {
             this.particles.emit(this.playerX, this.playerY, '#22d3ee', 1, 2.0);
           }
 
-          const currentAcc = Math.min(1.0, w.timeInSync / w.activeHoldTime);
+          const currentAcc = Math.min(1.0, w.activeHoldTime > 0 ? (w.timeInSync / w.activeHoldTime) : 0);
           const currentPct = Math.round(currentAcc * 100);
           this.syncPctText.textContent = `${currentPct}%`;
-          this.syncProgressBar.style.width = `${Math.min(100, Math.round((w.timeInSync / (w.duration * this.config.SYNC_THRESHOLD)) * 100))}%`;
+          this.syncProgressBar.style.width = `${currentPct}%`;
+
+          if (currentAcc >= this.config.SYNC_THRESHOLD) {
+            this.syncProgressBar.classList.add('pass');
+            this.syncProgressBar.classList.remove('fail');
+          } else {
+            this.syncProgressBar.classList.add('fail');
+            this.syncProgressBar.classList.remove('pass');
+          }
         }
 
         if (isTailCrossed) {
