@@ -17,7 +17,7 @@ const GAME_CONFIG = {
   TOTAL_ROUNDS: 4,
 
   // Wave Line & Tracking Parameters (Clean Oscilloscope/Rhythm Line)
-  TOLERANCE_RADIUS: 36,        // Pixel distance tolerance around the wave line
+  TOLERANCE_RADIUS: 14,        // Pixel distance tolerance around the wave line
   LINE_WIDTH: 8,               // Ketebalan garis wave (pixel) - default 8px agar jelas terlihat
   LEAD_IN_TIME: 0.75,          // Seconds before wave head reaches judgment line
   SYNC_THRESHOLD: 0.70,        // 70% hold accuracy to clear wave
@@ -33,7 +33,7 @@ const GAME_CONFIG = {
    * Valid values: -10..-1 and 1..10
    */
   generateRandomNumber() {
-    const rand = Math.floor(Math.random() * 20) - 10; // -10 to 9
+    const rand = Math.floor(Math.random() * 21) - 10; // -10 to 10
     return rand >= 0 ? rand + 1 : rand;
   }
 };

@@ -177,6 +177,7 @@
 .sync-meter-info {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.5px;
@@ -188,12 +189,27 @@
   color: var(--text-muted);
 }
 
+.sync-label span {
+  color: var(--text-main);
+  font-weight: 800;
+}
+
+.sync-target-label {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+}
+
+.sync-target-label span {
+  color: #ffffff;
+  font-weight: 800;
+}
+
 .sync-progress-track {
   width: 100%;
-  height: 5px;
+  height: 6px;
   background-color: rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-xs);
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid var(--bg-card-border);
   position: relative;
 }
@@ -203,7 +219,39 @@
   width: 0%;
   background-color: var(--accent-green);
   border-radius: var(--radius-xs);
-  transition: width 0.1s linear;
+  transition: width 0.05s linear;
+}
+
+.sync-progress-bar.fail {
+  background-color: var(--accent-amber);
+}
+
+.sync-progress-bar.pass {
+  background-color: var(--accent-green);
+}
+
+.sync-threshold-marker {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background-color: #ffffff;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.95);
+  border-radius: 1px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 5;
+}
+
+.sync-threshold-marker::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  border-top: 4px solid #ffffff;
 }
 
 .wave-dots-container {
