@@ -784,16 +784,16 @@ class NumoriaGame {
 
     let gradeText = "";
     if (totalScore >= 9000) {
-      gradeText = "GRADE S - DUAL-FOCUS MASTER";
+      gradeText = "GRADE S";
       this.resGradePill.style.color = "var(--accent-green)";
     } else if (totalScore >= 7500) {
-      gradeText = "GRADE A - SANGAT FOKUS & TANGGUH";
+      gradeText = "GRADE A";
       this.resGradePill.style.color = "var(--secondary-cyan)";
     } else if (totalScore >= 5500) {
-      gradeText = "GRADE B - PERFORMA SOLID";
+      gradeText = "GRADE B";
       this.resGradePill.style.color = "var(--accent-amber)";
     } else {
-      gradeText = "GRADE C - BUTUH LATIHAN MEMORI";
+      gradeText = "GRADE C ";
       this.resGradePill.style.color = "var(--accent-red)";
     }
     this.resGradePill.textContent = gradeText;
@@ -1009,16 +1009,24 @@ class NumoriaGame {
     if (linePts.length < 2) return;
 
     // Clean wave line (pure path without start/end circles)
+    const lw = this.config.LINE_WIDTH || 8;
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(linePts[0].x, linePts[0].y);
     for (let i = 1; i < linePts.length; i++) {
       ctx.lineTo(linePts[i].x, linePts[i].y);
     }
-    ctx.lineWidth = 3.2;
-    ctx.strokeStyle = '#0284c7';
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
+
+    // Soft outer glow without shadowBlur performance penalty
+    ctx.lineWidth = lw + 4;
+    ctx.strokeStyle = 'rgba(2, 132, 199, 0.25)';
+    ctx.stroke();
+
+    // Solid main line
+    ctx.lineWidth = lw;
+    ctx.strokeStyle = '#38bdf8';
     ctx.stroke();
     ctx.restore();
   }

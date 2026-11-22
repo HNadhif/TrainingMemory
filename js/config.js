@@ -18,9 +18,9 @@ const GAME_CONFIG = {
 
   // Wave Line & Tracking Parameters (Clean Oscilloscope/Rhythm Line)
   TOLERANCE_RADIUS: 36,        // Pixel distance tolerance around the wave line
-  LINE_WIDTH: 3.5,             // Clean line width for crisp rendering without lag
+  LINE_WIDTH: 8,               // Ketebalan garis wave (pixel) - default 8px agar jelas terlihat
   LEAD_IN_TIME: 0.75,          // Seconds before wave head reaches judgment line
-  SYNC_THRESHOLD: 0.58,        // 58% hold accuracy to clear wave
+  SYNC_THRESHOLD: 0.70,        // 70% hold accuracy to clear wave
   KEY_SPEED: 520,              // Speed for keyboard slider movement (px/s)
   POPUP_DURATION_MS: 1000,     // Pop-up numbers show for max 1 second (1000ms)
 
