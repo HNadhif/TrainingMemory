@@ -48,6 +48,7 @@ class NumoriaGame {
     this.keys = {};
     this.keySpeed = this.config.KEY_SPEED;
     this.isDraggingSlider = false;
+    this.currentSliderRatio = 0.5;
 
     // Input Answer modal state
     this.userInputValue = "";
@@ -132,12 +133,17 @@ class NumoriaGame {
   }
 
   resizeCanvas() {
+    this.dpr = Math.min(window.devicePixelRatio || 1, 2);
     const rect = this.canvas.getBoundingClientRect();
-    this.canvasWidth = Math.round(rect.width) || (this.isLandscape() ? 900 : 480);
-    this.canvasHeight = Math.round(rect.height) || (this.isLandscape() ? 440 : 540);
+    const w = Math.round(rect.width) || (this.isLandscape() ? 900 : 480);
+    const h = Math.round(rect.height) || (this.isLandscape() ? 440 : 540);
 
-    this.canvas.width = this.canvasWidth * this.dpr;
-    this.canvas.height = this.canvasHeight * this.dpr;
+    const oldJudgmentPos = this.judgmentLinePos;
+    this.canvasWidth = w;
+    this.canvasHeight = h;
+
+    this.canvas.width = Math.round(w * this.dpr);
+    this.canvas.height = Math.round(h * this.dpr);
     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
 
     // Judgment Line position (seimbang, tidak terlalu dekat dan tidak terlalu jauh):
@@ -146,12 +152,25 @@ class NumoriaGame {
     if (this.isLandscape()) {
       this.judgmentLinePos = Math.round(this.canvasWidth * 0.88);
       this.playerX = this.judgmentLinePos;
-      this.setSliderRatio(0.5); // Center slider
     } else {
       this.judgmentLinePos = Math.round(this.canvasHeight * 0.84);
       this.playerY = this.judgmentLinePos;
-      this.setSliderRatio(0.5); // Center slider
     }
+
+    // Pertahankan progres gelombang jika rotasi terjadi saat bermain
+    if (this.currentWave && oldJudgmentPos && oldJudgmentPos !== this.judgmentLinePos) {
+      const w = this.currentWave;
+      const newLeadIn = this.judgmentLinePos + 40;
+      if (!w.hasHeadHit && w.leadInDist > 0) {
+        w.travelDist = (w.travelDist / w.leadInDist) * newLeadIn;
+      } else {
+        w.travelDist = newLeadIn + Math.max(0, w.travelDist - w.leadInDist);
+      }
+      w.leadInDist = newLeadIn;
+      w.totalDist = w.length + w.leadInDist;
+    }
+
+    this.setSliderRatio(this.currentSliderRatio !== undefined ? this.currentSliderRatio : 0.5);
   }
 
   bindDOM() {
@@ -230,6 +249,7 @@ class NumoriaGame {
   /* Direct, unrestricted 1:1 Slider Positioning */
   setSliderRatio(ratio) {
     const clamped = Math.max(0, Math.min(1, ratio));
+    this.currentSliderRatio = clamped;
 
     if (this.isLandscape()) {
       // Desktop: Vertical Slider (Up <-> Down)
@@ -260,6 +280,19 @@ class NumoriaGame {
     window.addEventListener('resize', () => {
       this.updateOrientationAndResize();
     });
+
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        this.updateOrientationAndResize();
+      }, 50);
+    });
+
+    if (window.ResizeObserver && this.canvas) {
+      this.resizeObserver = new ResizeObserver(() => {
+        this.updateOrientationAndResize();
+      });
+      this.resizeObserver.observe(this.canvas);
+    }
 
     // Sound Toggle
     this.btnSoundToggle.addEventListener('click', (e) => {
@@ -411,7 +444,6 @@ class NumoriaGame {
      - Pola lekukan acak (random spline waypoints)
      ======================================================================== */
   createWaveLine(config) {
-    const isLand = this.isLandscape();
     const duration = config.waveDuration;
     const speed = config.speed;
     const length = duration * speed;
@@ -419,34 +451,29 @@ class NumoriaGame {
     // Muncul dari luar layar (offscreen) secara bertahap
     const leadInDist = this.judgmentLinePos + 40;
 
-    const transverseDimension = isLand ? this.canvasHeight : this.canvasWidth;
-    const transverseCenter = transverseDimension / 2;
-
-    // Amplitudo lembut: tidak terlalu menekuk (maksimal ±20% dimensi canvas)
-    const maxAmp = transverseDimension * 0.20;
-
-    // Bangun waypoint acak sepanjang gelombang (s)
+    // Bangun waypoint ternormalisasi sepanjang gelombang (s)
     const waypoints = [];
     let currentS = -120;
-    let lastY = transverseCenter + (Math.random() - 0.5) * maxAmp * 0.5;
+    let lastRatio = (Math.random() - 0.5) * 0.5;
 
-    waypoints.push({ s: currentS, y: lastY });
+    waypoints.push({ s: currentS, r: lastRatio });
 
     while (currentS < length + 300) {
       // Jarak lekukan acak: 190px s/d 310px agar variasi belokan dinamis
       const interval = 190 + Math.random() * 120;
       currentS += interval;
 
-      // Batasi sudut kemiringan agar tidak menekuk ekstrem (maks slope ~0.32)
-      const maxStep = Math.min(maxAmp * 1.05, interval * 0.32);
-      const targetY = transverseCenter + (Math.random() - 0.5) * 2 * maxAmp;
-      const delta = Math.max(-maxStep, Math.min(maxStep, targetY - lastY));
-      lastY = Math.max(transverseCenter - maxAmp, Math.min(transverseCenter + maxAmp, lastY + delta));
+      // Batasi perubahan rasio agar kemiringan kurva selalu lembut
+      const maxDelta = 0.55;
+      const targetRatio = (Math.random() - 0.5) * 2;
+      const delta = Math.max(-maxDelta, Math.min(maxDelta, targetRatio - lastRatio));
+      lastRatio = Math.max(-1, Math.min(1, lastRatio + delta));
 
-      waypoints.push({ s: currentS, y: lastY });
+      waypoints.push({ s: currentS, r: lastRatio });
     }
 
     // Evaluasi kurva halus menggunakan Catmull-Rom Spline
+    // Dihitung dinamis agar responsif terhadap rotasi layar kapan saja
     const getTransverseAt = (s) => {
       let i = 0;
       while (i < waypoints.length - 2 && waypoints[i + 1].s < s) {
@@ -464,15 +491,22 @@ class NumoriaGame {
       const t2 = t * t;
       const t3 = t2 * t;
 
-      const v0 = (p2.y - p0.y) * 0.5;
-      const v1 = (p3.y - p1.y) * 0.5;
+      const v0 = (p2.r - p0.r) * 0.5;
+      const v1 = (p3.r - p1.r) * 0.5;
 
       const h00 = 2 * t3 - 3 * t2 + 1;
       const h10 = t3 - 2 * t2 + t;
       const h01 = -2 * t3 + 3 * t2;
       const h11 = t3 - t2;
 
-      return h00 * p1.y + h10 * v0 + h01 * p2.y + h11 * v1;
+      const normOffset = h00 * p1.r + h10 * v0 + h01 * p2.r + h11 * v1;
+
+      const isLand = this.isLandscape();
+      const transverseDim = isLand ? this.canvasHeight : this.canvasWidth;
+      const transverseCenter = transverseDim / 2;
+      const maxAmp = transverseDim * 0.20;
+
+      return transverseCenter + normOffset * maxAmp;
     };
 
     return {
@@ -972,6 +1006,14 @@ class NumoriaGame {
   }
 
   draw() {
+    // Aspect-ratio sync: pastikan buffer canvas selalu 1:1 identik dengan dimensi CSS render
+    const rect = this.canvas.getBoundingClientRect();
+    const curW = Math.round(rect.width);
+    const curH = Math.round(rect.height);
+    if (curW > 0 && curH > 0 && (curW !== this.canvasWidth || curH !== this.canvasHeight)) {
+      this.resizeCanvas();
+    }
+
     const ctx = this.ctx;
     const isLand = this.isLandscape();
     ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
