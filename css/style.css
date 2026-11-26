@@ -36,7 +36,6 @@ html, body {
   background-color: var(--bg-dark);
   border-left: 1px solid var(--bg-card-border);
   border-right: 1px solid var(--bg-card-border);
-  transition: max-width 0.2s ease, height 0.2s ease;
 }
 
 /* Desktop Landscape Widescreen Console */
